@@ -13,7 +13,9 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	view := http.HandlerFunc(viewHandler)
 
-	settings := NewSettings()
+	settings := govn.NewSettings()
+	settings.UserToken = "IRb6-"
+	settings.SecretKey = "secret"
 
 	interceptor := govn.NewInterceptor(settings)
 

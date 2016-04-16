@@ -169,7 +169,7 @@ func (h *Headers) RequestOut(defLang string) *http.Request {
 }
 
 func (h *Headers) RemoveLang(args ...string) string {
-	if len(args) != 1 || len(args) != 2 {
+	if len(args) != 1 && len(args) != 2 {
 		panic("Invalid arguments") // TODO
 	}
 
