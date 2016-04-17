@@ -28,6 +28,9 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 	h.Request = req
 	h.Settings = settings
 	h.Protocol = h.Request.URL.Scheme
+	if h.Protocol == "" {
+		h.Protocol = req.Header.Get("X-Forwarded-Proto")
+	}
 	h.UnmaskedHost = h.Request.Host
 	uri := h.Request.RequestURI
 	if uri != "" {
