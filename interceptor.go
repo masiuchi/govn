@@ -385,7 +385,15 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 		parentNode.AddChild(insertNode)
 	}
 
-	doc.SetAttr("lang", lang)
+	x = xpath.Compile("html")
+	nodes, err = doc.Search(x)
+	if err != nil && len(nodes) == 0 {
+		x = xpath.Compile("HTML")
+		nodes, err = doc.Search(x)
+	}
+	if nodes != nil && len(nodes) > 0 {
+		nodes[0].SetAttr("lang", lang)
+	}
 
 	h, _ := doc.ToHtml(nil, nil)
 	html := string(h)
