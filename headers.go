@@ -118,7 +118,11 @@ func (h *Headers) Redirect(lang string) *http.Header {
 
 func (h *Headers) RedirectLocation(lang string) string {
 	if lang == h.Settings.DefaultLang {
-		return h.Protocol + "://" + h.Url
+		if h.Protocol != "" {
+			return h.Protocol + "://" + h.Url
+		} else {
+			return h.Url
+		}
 	} else {
 		location := h.Url
 		switch h.Settings.UrlPattern {
