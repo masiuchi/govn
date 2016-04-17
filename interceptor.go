@@ -387,7 +387,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 
 	x = xpath.Compile("html")
 	nodes, err = doc.Search(x)
-	if err != nil && len(nodes) == 0 {
+	if err != nil || len(nodes) == 0 {
 		x = xpath.Compile("HTML")
 		nodes, err = doc.Search(x)
 	}
