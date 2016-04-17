@@ -219,7 +219,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 		}
 	}
 
-	x = xpath.Compile("//text")
+	x = xpath.Compile("//text()")
 	nodes, err = doc.Search(x)
 	if err != nil {
 	} else {
@@ -235,7 +235,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 						l := langs.GetIndex(0)
 						data, err := l.Get("data").String()
 						if err == nil {
-							content := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(n.Content(), "$1"+data+"$2")
+							content := strings.Replace(n.Content(), nodeText, data, -1)
 							n.SetContent(content)
 						}
 					}
@@ -267,7 +267,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 						l := langs.GetIndex(0)
 						data, err := l.Get("data").String()
 						if err == nil {
-							v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(content, "$1"+data+"$2")
+							v := strings.Replace(n.Attr("content"), content, data, -1)
 							n.SetAttr("content", v)
 						}
 					}
@@ -320,7 +320,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 							l := langs.GetIndex(0)
 							data, err := l.Get("data").String()
 							if err == nil {
-								v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(alt, "$1"+data+"$2")
+								v := strings.Replace(n.Attr("alt"), alt, data, -1)
 								n.SetAttr("alt", v)
 							}
 						}
