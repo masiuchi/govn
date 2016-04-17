@@ -19,6 +19,8 @@ type Headers struct {
 	*Settings
 	Request     *http.Request
 	BrowserLang string
+	Pathname    string
+	Query       string
 }
 
 func NewHeaders(req *http.Request, settings *Settings) *Headers {
@@ -32,7 +34,8 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 		if regexp.MustCompile(`^[^/]`).MatchString(h.Request.URL.Path) {
 			h.Request.RequestURI = "/"
 		}
-		//		h.Request.RequestURI += h.Request.URL.Path
+		// Provably, this line is not needed.
+		// h.Request.RequestURI += h.Request.URL.Path
 		if len(h.Request.URL.RawQuery) > 0 {
 			h.Request.RequestURI += "?" + h.Request.URL.RawQuery
 		}
@@ -53,6 +56,29 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 	} else {
 		h.Host = h.Request.Host
 	}
+
+	split = strings.Split(h.Request.RequestURI, "?")
+	h.Pathname = split[0]
+	if len(split) > 1 {
+		h.Query = split[1]
+	}
+	if settings.UrlPattern == "path" {
+		h.PathName = h.RemoveLang(h.PathName, h.LangCode())
+	}
+
+	h.Url = h.Host + h.PathName
+	if len(h.Query) > 0 {
+		h.Url += "?"
+	}
+	h.Url += h.RemoveLang(h.Query, h.LangCode())
+
+	if len(settings.Query) > 0 {
+		// TODO
+	}
+
+	h.PathName = regexp.MustCompile(`/$`).ReplaceAllString(h.PathName, "")
+
+	h.RedisUrl = h.Host + h.PathName + h.Query
 
 	return h
 }
@@ -161,6 +187,9 @@ func (h *Headers) RequestOut(defLang string) *http.Request {
 		if h.Request.URL.RawPath != "" {
 			h.Request.URL.RawPath = h.RemoveLang(h.Request.URL.RawPath)
 		}
+		if h.Request.URL.Path != "" {
+			h.Request.URL.Path = h.RemoveLang(h.Request.URL.Path)
+		}
 	case "subdomain":
 		h.Request.Host = h.RemoveLang(h.Request.Host)
 		/*
@@ -174,8 +203,8 @@ func (h *Headers) RequestOut(defLang string) *http.Request {
 			h.Request.URL.RawPath = h.RemoveLang(h.Request.URL.RawPath)
 		}
 		//		h.Env["PATH_INFO"] = h.RemoveLang(h.Env["PATH_INFO"])
-		if h.Request.URL.RawPath != "" {
-			h.Request.URL.RawPath = h.RemoveLang(h.Request.URL.RawPath)
+		if h.Request.URL.Path != "" {
+			h.Request.URL.Path = h.RemoveLang(h.Request.URL.Path)
 		}
 	}
 
@@ -206,7 +235,7 @@ func (h *Headers) RemoveLang(args ...string) string {
 		r := regexp.MustCompile(`(^|(//))` + lang + `\.`)
 		uri = r.ReplaceAllString(uri, "$1")
 	default:
-		r := regexp.MustCompile(`//` + lang + `(/|$)`)
+		r := regexp.MustCompile(`/` + lang + `(/|$)`)
 		uri = r.ReplaceAllString(uri, "/")
 	}
 	return uri
