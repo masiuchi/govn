@@ -7,7 +7,8 @@ import (
 )
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %q", r.URL.Path[1:])
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, "<html><body><div>Hello, %q</div></body></html>", r.URL.Path[1:])
 }
 
 func main() {

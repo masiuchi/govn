@@ -32,7 +32,7 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 		if regexp.MustCompile(`^[^/]`).MatchString(h.Request.URL.Path) {
 			h.Request.RequestURI = "/"
 		}
-		h.Request.RequestURI += h.Request.URL.Path
+		//		h.Request.RequestURI += h.Request.URL.Path
 		if len(h.Request.URL.RawQuery) > 0 {
 			h.Request.RequestURI += "?" + h.Request.URL.RawQuery
 		}
@@ -68,10 +68,20 @@ func (h *Headers) LangCode() string {
 func (h *Headers) GetPathLang() string {
 	if h.PathLang == "" {
 		r := h.Settings.UrlPatternReg
-		match := h.Request.URL.Host + h.Request.RequestURI
-		lang := r.ReplaceAllString(match, "$lang")
-		if lang != match && GetLang(lang) != nil {
-			h.PathLang = GetCode(lang)
+		match := r.FindStringSubmatch(h.Request.URL.Host + h.Request.RequestURI)
+		result := make(map[string]string)
+		for i, name := range r.SubexpNames() {
+			// result[name] = match[i]
+			if i != 0 {
+				result[name] = match[i]
+			}
+		}
+		if match != nil {
+			if lang, ok := result["lang"]; ok {
+				if GetLang(lang) != nil {
+					h.PathLang = GetCode(lang)
+				}
+			}
 		}
 	}
 	return h.PathLang

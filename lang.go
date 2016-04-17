@@ -166,7 +166,7 @@ func GetCode(langName string) string {
 
 func GetLang(langName string) *Lang {
 	code := GetCode(langName)
-	if code == "" {
+	if code != "" {
 		lang := LANG[code]
 		return &lang
 	} else {

@@ -140,6 +140,7 @@ func CheckWovnIgnore(n xml.Node) bool {
 }
 
 func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json, u map[string]string, lang string, headers *Headers) string {
+
 	if lang == "" {
 		lang = interceptor.Store.Settings.DefaultLang
 	}
@@ -157,7 +158,7 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 	x := xpath.Compile("//html[@wovn-ignore]")
 	nodes, err := doc.Search(x)
 	if err != nil {
-	} else if len(nodes) == 0 {
+	} else if len(nodes) > 0 {
 		h, _ := doc.ToHtml(nil, nil)
 		html := string(h)
 		re := regexp.MustCompile(`href="([^"]*)"`)
