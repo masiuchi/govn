@@ -217,175 +217,175 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 				}
 			}
 		}
+	}
 
-		x = xpath.Compile("//text")
-		nodes, err = doc.Search(x)
-		if err != nil {
-		} else {
-			for _, n := range nodes {
-				if !CheckWovnIgnore(n) {
-					continue
+	x = xpath.Compile("//text")
+	nodes, err = doc.Search(x)
+	if err != nil {
+	} else {
+		for _, n := range nodes {
+			if !CheckWovnIgnore(n) {
+				continue
+			}
+			nodeText := regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(n.Content(), "")
+			if srcs, ok := textIndex.CheckGet(nodeText); ok {
+				if langs, ok := srcs.CheckGet(lang); ok {
+					arr, err := langs.Array()
+					if err == nil && len(arr) > 0 {
+						l := langs.GetIndex(0)
+						data, err := l.Get("data").String()
+						if err == nil {
+							content := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(n.Content(), "$1"+data+"$2")
+							n.SetContent(content)
+						}
+					}
 				}
-				nodeText := regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(n.Content(), "")
-				if srcs, ok := textIndex.CheckGet(nodeText); ok {
+			}
+		}
+	}
+
+	x = xpath.Compile("//meta")
+	nodes, err = doc.Search(x)
+	if err == nil {
+		for _, n := range nodes {
+			if !CheckWovnIgnore(n) {
+				continue
+			}
+			attr := n.Attr("name")
+			if attr == "" {
+				attr = n.Attr("property")
+			}
+			if !regexp.MustCompile(`^(description|title|og:title|og:description|twitter:title|twitter:description)$`).MatchString(attr) {
+				continue
+			}
+			content := n.Attr("content")
+			content = regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(content, "")
+			if srcs, ok := textIndex.CheckGet(content); ok {
+				if langs, ok := srcs.CheckGet(lang); ok {
+					arr, err := langs.Array()
+					if err == nil && len(arr) > 0 {
+						l := langs.GetIndex(0)
+						data, err := l.Get("data").String()
+						if err == nil {
+							v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(content, "$1"+data+"$2")
+							n.SetAttr("content", v)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	x = xpath.Compile("//img")
+	nodes, err = doc.Search(x)
+	if err == nil {
+		for _, n := range nodes {
+			if !CheckWovnIgnore(n) {
+				continue
+			}
+			h, _ := n.ToHtml(nil, nil)
+			html := string(h)
+			matched := regexp.MustCompile(`(?i)src=['"]([^'"]*)['"]`).FindStringSubmatch(html)
+			if len(matched) > 0 {
+				src := matched[1]
+				if !regexp.MustCompile(`://`).MatchString(src) {
+					if regexp.MustCompile(`^/`).MatchString(src) {
+						src = u["protocol"] + "://" + u["host"] + src
+					} else {
+						src = u["protocol"] + "://" + u["host"] + u["path"] + src
+					}
+				}
+
+				if srcs, ok := srcIndex.CheckGet(src); ok {
 					if langs, ok := srcs.CheckGet(lang); ok {
 						arr, err := langs.Array()
 						if err == nil && len(arr) > 0 {
 							l := langs.GetIndex(0)
 							data, err := l.Get("data").String()
 							if err == nil {
-								content := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(n.Content(), "$1"+data+"$2")
-								n.SetContent(content)
+								n.SetAttr("src", imgSrcPrefix+data)
 							}
 						}
 					}
 				}
 			}
-		}
 
-		x = xpath.Compile("//meta")
-		nodes, err = doc.Search(x)
-		if err == nil {
-			for _, n := range nodes {
-				if !CheckWovnIgnore(n) {
-					continue
-				}
-				attr := n.Attr("name")
-				if attr == "" {
-					attr = n.Attr("property")
-				}
-				if !regexp.MustCompile(`^(description|title|og:title|og:description|twitter:title|twitter:description)$`).MatchString(attr) {
-					continue
-				}
-				content := n.Attr("content")
-				content = regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(content, "")
-				if srcs, ok := textIndex.CheckGet(content); ok {
+			alt := n.Attr("alt")
+			if alt != "" {
+				alt = regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(alt, "")
+				if srcs, ok := textIndex.CheckGet(alt); ok {
 					if langs, ok := srcs.CheckGet(lang); ok {
 						arr, err := langs.Array()
 						if err == nil && len(arr) > 0 {
 							l := langs.GetIndex(0)
 							data, err := l.Get("data").String()
 							if err == nil {
-								v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(content, "$1"+data+"$2")
-								n.SetAttr("content", v)
+								v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(alt, "$1"+data+"$2")
+								n.SetAttr("alt", v)
 							}
 						}
 					}
 				}
 			}
 		}
+	}
 
-		x = xpath.Compile("//img")
-		nodes, err = doc.Search(x)
-		if err == nil {
-			for _, n := range nodes {
-				if !CheckWovnIgnore(n) {
-					continue
-				}
-				h, _ := n.ToHtml(nil, nil)
-				html := string(h)
-				matched := regexp.MustCompile(`(?i)src=['"]([^'"]*)['"]`).FindStringSubmatch(html)
-				if len(matched) > 0 {
-					src := matched[1]
-					if !regexp.MustCompile(`://`).MatchString(src) {
-						if regexp.MustCompile(`^/`).MatchString(src) {
-							src = u["protocol"] + "://" + u["host"] + src
-						} else {
-							src = u["protocol"] + "://" + u["host"] + u["path"] + src
-						}
-					}
-
-					if srcs, ok := srcIndex.CheckGet(src); ok {
-						if langs, ok := srcs.CheckGet(lang); ok {
-							arr, err := langs.Array()
-							if err == nil && len(arr) > 0 {
-								l := langs.GetIndex(0)
-								data, err := l.Get("data").String()
-								if err == nil {
-									n.SetAttr("src", imgSrcPrefix+data)
-								}
-							}
-						}
-					}
-				}
-
-				alt := n.Attr("alt")
-				if alt != "" {
-					alt = regexp.MustCompile(`^\s+|\s+$`).ReplaceAllString(alt, "")
-					if srcs, ok := textIndex.CheckGet(alt); ok {
-						if langs, ok := srcs.CheckGet(lang); ok {
-							arr, err := langs.Array()
-							if err == nil && len(arr) > 0 {
-								l := langs.GetIndex(0)
-								data, err := l.Get("data").String()
-								if err == nil {
-									v := regexp.MustCompile(`^(\s*)[\S\s]*(\s*)$`).ReplaceAllString(alt, "$1"+data+"$2")
-									n.SetAttr("alt", v)
-								}
-							}
-						}
-					}
-				}
+	x = xpath.Compile("//script")
+	nodes, err = doc.Search(x)
+	if err == nil {
+		for _, n := range nodes {
+			src := n.Attr("src")
+			if regexp.MustCompile(`//j.(dev-)?wovn.io(:3000)?/`).MatchString(src) {
+				n.Remove()
 			}
 		}
+	}
 
-		x = xpath.Compile("//script")
-		nodes, err = doc.Search(x)
-		if err == nil {
-			for _, n := range nodes {
-				src := n.Attr("src")
-				if regexp.MustCompile(`//j.(dev-)?wovn.io(:3000)?/`).MatchString(src) {
-					n.Remove()
-				}
-			}
-		}
-
-		var parentNode xml.Node
-		x = xpath.Compile("head")
+	var parentNode xml.Node
+	x = xpath.Compile("head")
+	nodes, err = doc.Search(x)
+	if err == nil && len(nodes) > 0 {
+		parentNode = nodes[0]
+	}
+	if parentNode == nil {
+		x = xpath.Compile("body")
 		nodes, err := doc.Search(x)
 		if err == nil && len(nodes) > 0 {
 			parentNode = nodes[0]
 		}
-		if parentNode == nil {
-			x = xpath.Compile("body")
-			nodes, err := doc.Search(x)
-			if err == nil && len(nodes) > 0 {
-				parentNode = nodes[0]
-			}
-		}
-		if parentNode == nil {
-			parentNode = doc
-		}
-
-		insertNode := doc.CreateElementNode("script")
-		insertNode.SetAttr("src", "//j.wovn.io/1")
-		insertNode.SetAttr("async", "")
-		version := ""
-		dataWovnio := "key=" + interceptor.Store.Settings.UserToken
-		dataWovnio += "&backend=true&currentLang=" + lang
-		dataWovnio += "&defaultLang=" + interceptor.Store.Settings.DefaultLang
-		dataWovnio += "&urlPattern=" + interceptor.Store.Settings.UrlPattern
-		dataWovnio += "&version=" + version
-		insertNode.SetAttr("data-wovnio", dataWovnio)
-		insertNode.SetContent(" ")
-
-		if parentNode.CountChildren() > 0 {
-			parentNode.FirstChild().AddPreviousSibling(insertNode)
-		} else {
-			parentNode.AddChild(insertNode)
-		}
-
-		publishedLangs := GetLangs(values)
-		for _, l := range publishedLangs {
-			insertNode = doc.CreateElementNode("link")
-			insertNode.SetAttr("rel", "alternate")
-			insertNode.SetAttr("hreflang", l)
-			insertNode.SetAttr("href", headers.RedirectLocation(l))
-			parentNode.AddChild(insertNode)
-		}
-
-		doc.SetAttr("lang", lang)
 	}
+	if parentNode == nil {
+		parentNode = doc
+	}
+
+	insertNode := doc.CreateElementNode("script")
+	insertNode.SetAttr("src", "//j.wovn.io/1")
+	insertNode.SetAttr("async", "")
+	version := ""
+	dataWovnio := "key=" + interceptor.Store.Settings.UserToken
+	dataWovnio += "&backend=true&currentLang=" + lang
+	dataWovnio += "&defaultLang=" + interceptor.Store.Settings.DefaultLang
+	dataWovnio += "&urlPattern=" + interceptor.Store.Settings.UrlPattern
+	dataWovnio += "&version=" + version
+	insertNode.SetAttr("data-wovnio", dataWovnio)
+	insertNode.SetContent(" ")
+
+	if parentNode.CountChildren() > 0 {
+		parentNode.FirstChild().AddPreviousSibling(insertNode)
+	} else {
+		parentNode.AddChild(insertNode)
+	}
+
+	publishedLangs := GetLangs(values)
+	for _, l := range publishedLangs {
+		insertNode = doc.CreateElementNode("link")
+		insertNode.SetAttr("rel", "alternate")
+		insertNode.SetAttr("hreflang", l)
+		insertNode.SetAttr("href", headers.RedirectLocation(l))
+		parentNode.AddChild(insertNode)
+	}
+
+	doc.SetAttr("lang", lang)
 
 	h, _ := doc.ToHtml(nil, nil)
 	html := string(h)

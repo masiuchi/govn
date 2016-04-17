@@ -70,13 +70,13 @@ func (h *Headers) GetPathLang() string {
 		r := h.Settings.UrlPatternReg
 		match := r.FindStringSubmatch(h.Request.URL.Host + h.Request.RequestURI)
 		result := make(map[string]string)
-		for i, name := range r.SubexpNames() {
-			// result[name] = match[i]
-			if i != 0 {
-				result[name] = match[i]
-			}
-		}
 		if match != nil {
+			for i, name := range r.SubexpNames() {
+				// result[name] = match[i]
+				if i != 0 {
+					result[name] = match[i]
+				}
+			}
 			if lang, ok := result["lang"]; ok {
 				if GetLang(lang) != nil {
 					h.PathLang = GetCode(lang)
