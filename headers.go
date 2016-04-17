@@ -19,7 +19,6 @@ type Headers struct {
 	*Settings
 	Request     *http.Request
 	BrowserLang string
-	Pathname    string
 	Query       string
 }
 
@@ -61,7 +60,7 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 	}
 
 	split = strings.Split(h.Request.RequestURI, "?")
-	h.Pathname = split[0]
+	h.PathName = split[0]
 	if len(split) > 1 {
 		h.Query = split[1]
 	}
@@ -87,11 +86,11 @@ func NewHeaders(req *http.Request, settings *Settings) *Headers {
 }
 
 func (h *Headers) LangCode() string {
-	if h.PathLang != "" && len(h.PathLang) > 0 {
-		return h.GetPathLang()
-	} else {
-		return h.Settings.DefaultLang
+	langCode := h.GetPathLang()
+	if langCode == "" {
+		langCode = h.Settings.DefaultLang
 	}
+	return langCode
 }
 
 func (h *Headers) GetPathLang() string {

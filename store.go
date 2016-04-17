@@ -18,7 +18,7 @@ func NewStore(settings *Settings) *Store {
 }
 
 func (s *Store) GetValues(url string) *simplejson.Json {
-	url = regexp.MustCompile("/").ReplaceAllString(url, "")
+	url = regexp.MustCompile(`/$`).ReplaceAllString(url, "")
 	url = s.Settings.ApiUrl + "?token=" + s.Settings.UserToken + "&url=" + url
 
 	resp, err := http.Get(url)
