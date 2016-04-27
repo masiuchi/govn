@@ -16,6 +16,11 @@ var LANG = map[string]Lang{
 		Code:        "ar",
 		EnglishName: "Arabic",
 	},
+	"bg": Lang{
+		Name:        "Български",
+		Code:        "bg",
+		EnglishName: "Bulgarian",
+	},
 	"zh-CHS": Lang{
 		Name:        "简体中文",
 		Code:        "zh-CHS",

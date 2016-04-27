@@ -10,6 +10,12 @@ func TestLangsExists(t *testing.T) {
 	}
 }
 
+func TestLangsSize(t *testing.T) {
+	if len(LANG) != 28 {
+		t.Errorf("len(LANG) should be 28: %v", len(LANG))
+	}
+}
+
 func TestKeysExists(t *testing.T) {
 	for key, value := range LANG {
 		if value.Name == "" {
