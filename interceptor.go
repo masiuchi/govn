@@ -361,12 +361,11 @@ func (interceptor *Interceptor) SwitchLang(body string, values *simplejson.Json,
 	insertNode := doc.CreateElementNode("script")
 	insertNode.SetAttr("src", "//j.wovn.io/1")
 	insertNode.SetAttr("async", "")
-	version := ""
 	dataWovnio := "key=" + interceptor.Store.Settings.UserToken
 	dataWovnio += "&backend=true&currentLang=" + lang
 	dataWovnio += "&defaultLang=" + interceptor.Store.Settings.DefaultLang
 	dataWovnio += "&urlPattern=" + interceptor.Store.Settings.UrlPattern
-	dataWovnio += "&version=" + version
+	dataWovnio += "&version=" + Version
 	insertNode.SetAttr("data-wovnio", dataWovnio)
 	insertNode.SetContent(" ")
 
